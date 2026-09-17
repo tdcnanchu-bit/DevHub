@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="theme-color" content="#6c5ce7">
+  <meta
+    name="description"
+    content="DevHub - plataforma de estudos de programação"
+  >
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+
+  <title>DevHub</title>
+</head>
+
+<body>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- LOGIN -->
+  <section id="loginScreen" class="login-screen">
+
+    <div class="login-card">
+
+      <div class="brand large">
+        <span class="brand-icon">&lt;/&gt;</span>
+        <span>DevHub</span>
+      </div>
+
+      <p class="muted">
+        Aprenda programação no seu ritmo.
+      </p>
+
+      <form id="loginForm">
+
+        <label>Seu nome</label>
+
+        <input
+          id="loginName"
+          type="text"
+          placeholder="Digite seu nome"
+          maxlength="30"
+          required
+        >
+
+        <button
+          class="primary full"
+          type="submit"
+        >
+          Entrar no DevHub
+        </button>
+
+      </form>
+
+      <p class="small muted">
+        Seus dados de progresso ficam salvos neste navegador.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <!-- APLICAÇÃO -->
+  <div id="app" class="app hidden">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <div class="brand">
+
+        <span class="brand-icon">&lt;/&gt;</span>
+
+        <span>DevHub</span>
+
+      </div>
+
+
+      <div class="profile-mini">
+
+        <div id="avatarMini" class="avatar">
+          D
+        </div>
+
+        <div>
+
+          <strong id="userNameSide">
+            Dev
+          </strong>
+
+          <span id="userLevelSide">
+            Nível 1
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <nav>
+
+        <button
+          class="nav-btn active"
+          data-page="dashboard"
+        >
+          🏠 <span>Início</span>
+        </button>
+
+        <button
+          class="nav-btn"
+          data-page="courses"
+        >
+          📚 <span>Cursos</span>
+        </button>
+
+        <button
+          class="nav-btn"
+          data-page="lab"
+        >
+          💻 <span>Laboratório</span>
+        </button>
+
+        <button
+          class="nav-btn"
+          data-page="challenges"
+        >
+          🎯 <span>Desafios</span>
+        </button>
+
+        <button
+          class="nav-btn"
+          data-page="notes"
+        >
+          📝 <span>Anotações</span>
+        </button>
+
+        <button
+          class="nav-btn"
+          data-page="profile"
+        >
+          👤 <span>Perfil</span>
+        </button>
+
+      </nav>
+
+
+      <div class="sidebar-bottom">
+
+        <button
+          id="themeBtn"
+          class="nav-btn"
+        >
+          🌙 <span>Tema</span>
+        </button>
+
+        <button
+          id="logoutBtn"
+          class="nav-btn danger-text"
+        >
+          ↪ <span>Sair</span>
+        </button>
+
+      </div>
+
+    </aside>
+
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="main">
+
+      <header class="topbar">
+
+        <button
+          id="mobileMenuBtn"
+          class="icon-btn"
+        >
+          ☰
+        </button>
+
+        <div>
+
+          <h2 id="pageTitle">
+            Início
+          </h2>
+
+          <p
+            id="pageSubtitle"
+            class="muted"
+          >
+            Continue seus estudos.
+          </p>
+
+        </div>
+
+
+        <div class="top-actions">
+
+          <div class="xp-pill">
+            ⭐ <span id="xpTop">0</span> XP
+          </div>
+
+          <div
+            id="avatarTop"
+            class="avatar"
+          >
+            D
+          </div>
+
+        </div>
+
+      </header>
+
+
+      <!-- DASHBOARD -->
+      <section
+        id="dashboardPage"
+        class="page active"
+      >
+
+        <div class="hero">
+
+          <div>
+
+            <span class="eyebrow">
+              DEVHUB
+            </span>
+
+            <h1>
+              Olá,
+              <span id="userNameDash">
+                Dev
+              </span>! 👋
+            </h1>
+
+            <p>
+              Escolha uma aula e continue evoluindo como programador.
+            </p>
+
+          </div>
+
+          <button
+            class="primary"
+            data-page-jump="courses"
+          >
+            Ver cursos
+          </button>
+
+        </div>
+
+
+        <div class="stats-grid">
+
+          <div class="stat-card">
+
+            <span>⭐</span>
+
+            <div>
+
+              <small>
+                XP total
+              </small>
+
+              <strong id="xpStat">
+                0
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <span>📚</span>
+
+            <div>
+
+              <small>
+                Aulas concluídas
+              </small>
+
+              <strong id="lessonsStat">
+                0
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <span>🔥</span>
+
+            <div>
+
+              <small>
+                Sequência
+              </small>
+
+              <strong id="streakStat">
+                0 dias
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <span>🏆</span>
+
+            <div>
+
+              <small>
+                Cursos completos
+              </small>
+
+              <strong id="coursesStat">
+                0
+              </strong>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="section-heading">
+
+          <div>
+
+            <h3>
+              Continue aprendendo
+            </h3>
+
+            <p class="muted">
+              Seus cursos em andamento.
+            </p>
+
+          </div>
+
+          <button
+            class="text-btn"
+            data-page-jump="courses"
+          >
+            Ver todos →
+          </button>
+
+        </div>
+
+
+        <div
+          id="continueGrid"
+          class="course-grid"
+        ></div>
+
+
+        <div class="section-heading">
+
+          <div>
+
+            <h3>
+              Seu nível
+            </h3>
+
+            <p class="muted">
+              Ganhe XP concluindo aulas e desafios.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="level-card">
+
+          <div class="level-row">
+
+            <strong id="levelLabel">
+              Nível 1
+            </strong>
+
+            <span id="levelProgressText">
+              0 / 100 XP
+            </span>
+
+          </div>
+
+          <div class="progress">
+
+            <span id="levelProgress"></span>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- CURSOS -->
+      <section
+        id="coursesPage"
+        class="page"
+      >
+
+        <div class="page-intro">
+
+          <div>
+
+            <h1>
+              Cursos 📚
+            </h1>
+
+            <p class="muted">
+              Aprenda do básico ao avançado com aulas passo a passo.
+            </p>
+
+          </div>
+
+          <input
+            id="courseSearch"
+            class="search"
+            placeholder="🔎 Buscar curso..."
+          >
+
+        </div>
+
+
+        <div
+          id="coursesGrid"
+          class="course-grid"
+        ></div>
+
+      </section>
+
+
+      <!-- AULA -->
+      <section
+        id="lessonPage"
+        class="page"
+      >
+
+        <div class="lesson-top">
+
+          <button
+            id="backCoursesBtn"
+            class="secondary"
+          >
+            ← Voltar aos cursos
+          </button>
+
+          <div>
+
+            <span
+              id="lessonCourseLabel"
+              class="eyebrow"
+            >
+              CURSO
+            </span>
+
+            <h1 id="lessonCourseTitle">
+              Curso
+            </h1>
+
+          </div>
+
+        </div>
+
+
+        <div class="lesson-layout">
+
+          <aside class="lesson-sidebar">
+
+            <div class="course-progress-box">
+
+              <strong>
+                Progresso
+              </strong>
+
+              <div class="progress">
+
+                <span id="courseProgressBar"></span>
+
+              </div>
+
+              <span
+                id="courseProgressText"
+                class="muted"
+              >
+                0%
+              </span>
+
+            </div>
+
+
+            <div id="lessonList"></div>
+
+          </aside>
+
+
+          <article class="lesson-content">
+
+            <div class="lesson-header">
+
+              <span
+                id="lessonNumber"
+                class="lesson-number"
+              >
+                Aula 1
+              </span>
+
+              <span
+                id="lessonXP"
+                class="xp-tag"
+              >
+                +10 XP
+              </span>
+
+            </div>
+
+
+            <h2 id="lessonTitle">
+              Título da aula
+            </h2>
+
+
+            <div
+              id="lessonBody"
+              class="lesson-body"
+            ></div>
+
+
+            <div class="lesson-actions">
+
+              <button
+                id="prevLessonBtn"
+                class="secondary"
+              >
+                ← Anterior
+              </button>
+
+              <button
+                id="completeLessonBtn"
+                class="primary"
+              >
+                Concluir aula ✓
+              </button>
+
+              <button
+                id="nextLessonBtn"
+                class="primary"
+              >
+                Próxima →
+              </button>
+
+            </div>
+
+          </article>
+
+        </div>
+
+      </section>
+
+
+      <!-- LABORATÓRIO -->
+      <section
+        id="labPage"
+        class="page"
+      >
+
+        <div class="page-intro">
+
+          <div>
+
+            <h1>
+              Laboratório 💻
+            </h1>
+
+            <p class="muted">
+              Escreva código e veja o resultado.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="lab">
+
+          <div class="editor-panel">
+
+            <div class="tabs">
+
+              <button
+                class="tab active"
+                data-tab="html"
+              >
+                HTML
+              </button>
+
+              <button
+                class="tab"
+                data-tab="css"
+              >
+                CSS
+              </button>
+
+              <button
+                class="tab"
+                data-tab="js"
+              >
+                JS
+              </button>
+
+            </div>
+
+
+            <textarea id="htmlCode"></textarea>
+
+            <textarea
+              id="cssCode"
+              class="hidden"
+            ></textarea>
+
+            <textarea
+              id="jsCode"
+              class="hidden"
+            ></textarea>
+
+
+            <div class="editor-actions">
+
+              <button
+                id="runCodeBtn"
+                class="primary"
+              >
+                ▶ Executar
+              </button>
+
+              <button
+                id="saveCodeBtn"
+                class="secondary"
+              >
+                💾 Salvar
+              </button>
+
+              <button
+                id="clearCodeBtn"
+                class="secondary"
+              >
+                🗑 Limpar
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <div class="preview-panel">
+
+            <div class="preview-head">
+              Pré-visualização
+            </div>
+
+            <iframe
+              id="preview"
+            ></iframe>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- DESAFIOS -->
+      <section
+        id="challengesPage"
+        class="page"
+      >
+
+        <div class="page-intro">
+
+          <div>
+
+            <h1>
+              Desafios 🎯
+            </h1>
+
+            <p class="muted">
+              Pratique e ganhe XP.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="challengeGrid"
+          class="challenge-grid"
+        ></div>
+
+      </section>
+
+
+      <!-- ANOTAÇÕES -->
+      <section
+        id="notesPage"
+        class="page"
+      >
+
+        <div class="page-intro">
+
+          <div>
+
+            <h1>
+              Anotações 📝
+            </h1>
+
+            <p class="muted">
+              Guarde seus resumos e códigos importantes.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="notes-box">
+
+          <input
+            id="noteTitle"
+            placeholder="Título da anotação"
+          >
+
+          <textarea
+            id="noteText"
+            placeholder="Escreva sua anotação..."
+          ></textarea>
+
+          <button
+            id="saveNoteBtn"
+            class="primary"
+          >
+            Salvar anotação
+          </button>
+
+        </div>
+
+
+        <div
+          id="notesList"
+          class="notes-list"
+        ></div>
+
+      </section>
+
+
+      <!-- PERFIL -->
+      <section
+        id="profilePage"
+        class="page"
+      >
+
+        <div class="profile-card">
+
+          <div
+            id="profileAvatar"
+            class="avatar huge"
+          >
+            D
+          </div>
+
+          <h1 id="profileName">
+            Dev
+          </h1>
+
+          <p class="muted">
+            Nível
+            <span id="profileLevel">1</span>
+            ·
+            <span id="profileXP">0</span>
+            XP
+          </p>
+
+
+          <div class="profile-form">
+
+            <label>
+              Nome
+            </label>
+
+            <input
+              id="profileNameInput"
+              maxlength="30"
+            >
+
+            <button
+              id="saveProfileBtn"
+              class="primary"
+            >
+              Salvar perfil
+            </button>
+
+          </div>
+
+
+          <div class="achievements">
+
+            <h3>
+              Conquistas
+            </h3>
+
+            <div id="achievementList"></div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+
+  <script src="app.js"></script>
+
+</body>
+</html>

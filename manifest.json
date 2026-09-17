@@ -1,0 +1,11 @@
+{
+  "name": "DevHub",
+  "short_name": "DevHub",
+  "description": "Plataforma de estudos de programação",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#10111a",
+  "theme_color": "#6c5ce7",
+  "lang": "pt-BR",
+  "icons": []
+}
