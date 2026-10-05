@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6c63ff">
+    <meta name="description" content="DevHub - Aprenda programação, pratique e evolua.">
+
+    <title>DevHub 4.0</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login-screen">
+    <div class="login-card">
+        <div class="logo-big">D</div>
+
+        <h1>DevHub</h1>
+        <p>Aprenda programação, pratique e evolua.</p>
+
+        <input
+            id="loginName"
+            type="text"
+            maxlength="30"
+            placeholder="Digite seu nome"
+            autocomplete="off"
+        >
+
+        <button id="loginButton" class="primary-btn">
+            Entrar no DevHub
+        </button>
+    </div>
+</div>
+
+
+<!-- APP -->
+<div id="app" class="app hidden">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="logo">D</div>
+
+            <div>
+                <strong>DevHub</strong>
+                <span>Learning 4.0</span>
+            </div>
+        </div>
+
+        <nav>
+
+            <button class="nav-btn active" data-page="dashboard">
+                🏠 <span>Início</span>
+            </button>
+
+            <button class="nav-btn" data-page="courses">
+                📚 <span>Cursos</span>
+            </button>
+
+            <button class="nav-btn" data-page="lab">
+                💻 <span>Laboratório</span>
+            </button>
+
+            <button class="nav-btn" data-page="challenges">
+                🏆 <span>Desafios</span>
+            </button>
+
+            <button class="nav-btn" data-page="projects">
+                🚀 <span>Projetos</span>
+            </button>
+
+            <button class="nav-btn" data-page="notes">
+                📝 <span>Anotações</span>
+            </button>
+
+            <button class="nav-btn" data-page="profile">
+                👤 <span>Perfil</span>
+            </button>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <button id="themeToggle" class="secondary-btn">
+                🌙 Tema escuro
+            </button>
+
+            <button id="logoutButton" class="logout-btn">
+                Sair
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- CONTEÚDO -->
+    <main class="main">
+
+        <header class="topbar">
+
+            <div>
+                <span class="page-label">DEVHUB</span>
+                <h2 id="pageTitle">Início</h2>
+                <p id="welcomeText">Continue sua jornada.</p>
+            </div>
+
+            <div class="top-profile">
+
+                
+                <div>
+                    <strong id="topName">Dev</strong>
+                    <small id="topLevel">Nível 1</small>
+                </div>
+
+                <div class="avatar" id="topAvatar">
+                    D
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- DASHBOARD -->
+        <section id="dashboardPage" class="page active-page">
+
+            <div class="hero">
+
+                <div>
+                    <span class="hero-tag">
+                        🚀 Sua jornada começa aqui
+                    </span>
+
+                    <h1>
+                        Olá, <span id="heroName">Dev</span>!
+                    </h1>
+
+                    <p>
+                        Estude programação, pratique com desafios
+                        e construa seus próprios projetos.
+                    </p>
+
+                    <button class="primary-btn" data-go="courses">
+                        Continuar estudando
+                    </button>
+                </div>
+
+                <div class="hero-icon">
+                    &lt;/&gt;
+                </div>
+
+            </div>
+
+
+            <!-- ESTATÍSTICAS -->
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <span>⭐</span>
+                    <strong id="xpValue">0 XP</strong>
+                    <small>Experiência</small>
+                </div>
+
+                <div class="stat-card">
+                    <span>🔥</span>
+                    <strong id="streakValue">0 dias</strong>
+                    <small>Sequência</small>
+                </div>
+
+                <div class="stat-card">
+                    <span>📚</span>
+                    <strong id="lessonsValue">0</strong>
+                    <small>Aulas concluídas</small>
+                </div>
+
+                <div class="stat-card">
+                    <span>🏆</span>
+                    <strong id="challengeValue">0</strong>
+                    <small>Desafios</small>
+                </div>
+
+            </div>
+
+
+            <div class="dashboard-grid">
+
+                <div class="panel">
+
+                    <div class="panel-title">
+                        <div>
+                            <h3>🎯 Missão de hoje</h3>
+                            <p id="dailyMissionText">
+                                Complete 2 aulas hoje.
+                            </p>
+                        </div>
+
+                        <strong id="missionProgress">
+                            0/2
+                        </strong>
+                    </div>
+
+                    <div class="progress">
+                        <div id="missionBar"></div>
+                    </div>
+
+                </div>
+
+
+                <div class="panel">
+
+                    <div class="panel-title">
+                        <div>
+                            <h3>📈 Seu progresso</h3>
+                            <p>Continue evoluindo.</p>
+                        </div>
+                    </div>
+
+                    <div id="dashboardCourses"></div>
+
+                </div>
+
+            </div>
+
+
+            <div class="quick-grid">
+
+                <button class="quick-card" data-go="courses">
+                    📚
+                    <strong>Cursos</strong>
+                    <small>Aprenda novas tecnologias</small>
+                </button>
+
+                <button class="quick-card" data-go="lab">
+                    💻
+                    <strong>Laboratório</strong>
+                    <small>Escreva e execute código</small>
+                </button>
+
+                <button class="quick-card" data-go="challenges">
+                    🏆
+                    <strong>Desafios</strong>
+                    <small>Teste seus conhecimentos</small>
+                </button>
+
+                <button class="quick-card" data-go="projects">
+                    🚀
+                    <strong>Projetos</strong>
+                    <small>Construa aplicações</small>
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- CURSOS -->
+        <section id="coursesPage" class="page">
+
+            <div class="section-header">
+
+                <div>
+                    <h1>Cursos</h1>
+                    <p>
+                        Escolha uma tecnologia e comece suas aulas.
+                    </p>
+                </div>
+
+                <strong id="courseCount"></strong>
+
+            </div>
+
+
+            <div class="search-box">
+                🔎
+                <input
+                    id="courseSearch"
+                    type="search"
+                    placeholder="Pesquisar curso..."
+                >
+            </div>
+
+
+            <div id="coursesGrid" class="courses-grid"></div>
+
+        </section>
+
+
+        <!-- AULA -->
+        <section id="lessonPage" class="page">
+
+            <button id="backCourses" class="back-btn">
+                ← Voltar para cursos
+            </button>
+
+            <div id="lessonContent"></div>
+
+        </section>
+
+
+        <!-- LABORATÓRIO -->
+        <section id="labPage" class="page">
+
+            <div class="section-header">
+
+                <div>
+                    <h1>Laboratório</h1>
+                    <p>
+                        Escreva código e veja o resultado.
+                    </p>
+                </div>
+
+                <button id="runCode" class="primary-btn">
+                    ▶ Executar
+                </button>
+
+            </div>
+
+
+            <div class="editor-layout">
+
+                <div class="editor-panel">
+
+                    <div class="tabs">
+
+                        <button class="tab active" data-tab="html">
+                            HTML
+                        </button>
+
+                        <button class="tab" data-tab="css">
+                            CSS
+                        </button>
+
+                        <button class="tab" data-tab="js">
+                            JavaScript
+                        </button>
+
+                    </div>
+
+
+                    <textarea
+                        id="htmlCode"
+                        class="code-editor"
+                        spellcheck="false"
+                    ></textarea>
+
+                    <textarea
+                        id="cssCode"
+                        class="code-editor hidden"
+                        spellcheck="false"
+                    ></textarea>
+
+                    <textarea
+                        id="jsCode"
+                        class="code-editor hidden"
+                        spellcheck="false"
+                    ></textarea>
+
+
+                    <div class="editor-actions">
+
+                        <button id="copyCode">
+                            📋 Copiar
+                        </button>
+
+                        <button id="clearCode">
+                            🗑 Limpar
+                        </button>
+
+                        <button id="saveCode">
+                            💾 Salvar
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <div class="preview">
+
+                    <div class="preview-header">
+                        <span>Pré-visualização</span>
+                    </div>
+
+                    <iframe
+                        id="previewFrame"
+                        title="Pré-visualização"
+                    ></iframe>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- DESAFIOS -->
+        <section id="challengesPage" class="page">
+
+            <div class="section-header">
+
+                <div>
+                    <h1>Desafios</h1>
+                    <p>
+                        Resolva desafios e ganhe XP.
+                    </p>
+                </div>
+
+                <strong id="challengeProgress">
+                    0/0
+                </strong>
+
+            </div>
+
+            <div id="challengesGrid" class="challenges-grid"></div>
+
+        </section>
+
+
+        <!-- PROJETOS -->
+        <section id="projectsPage" class="page">
+
+            <div class="section-header">
+
+                <div>
+                    <h1>Projetos</h1>
+                    <p>
+                        Coloque seus conhecimentos em prática.
+                    </p>
+                </div>
+
+            </div>
+
+            <div id="projectsGrid" class="projects-grid"></div>
+
+        </section>
+
+
+        <!-- ANOTAÇÕES -->
+        <section id="notesPage" class="page">
+
+            <div class="section-header">
+
+                <div>
+                    <h1>Anotações</h1>
+                    <p>
+                        Guarde informações importantes.
+                    </p>
+                </div>
+
+                <button id="newNote" class="primary-btn">
+                    + Nova anotação
+                </button>
+
+            </div>
+
+            <div id="notesGrid" class="notes-grid"></div>
+
+        </section>
+
+
+        <!-- PERFIL -->
+        <section id="profilePage" class="page">
+
+            <div class="profile-card">
+
+                <div class="profile-avatar" id="profileAvatar">
+                    D
+                </div>
+
+                <h1 id="profileName">Dev</h1>
+
+                <p id="profileLevel">Nível 1</p>
+
+                <div class="xp-bar">
+                    <div id="profileXpBar"></div>
+                </div>
+
+                <p id="profileXpText">
+                    0 XP
+                </p>
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="section-header">
+                    <div>
+                        <h2>🏅 Conquistas</h2>
+                        <p>Continue estudando para desbloquear.</p>
+                    </div>
+                </div>
+
+                <div id="achievements" class="achievements"></div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+ 
+<!-- MODAL DE ANOTAÇÃO -->
+<div id="noteModal" class="modal hidden">
+
+    <div class="modal-card">
+
+        <button id="closeNote" class="modal-close">
+            ×
+        </button>
+
+        <h2>Nova anotação</h2>
+
+        <input
+            id="noteTitle"
+            placeholder="Título"
+            maxlength="60"
+        >
+
+        <textarea
+            id="noteText"
+            placeholder="Escreva sua anotação..."
+            rows="7"
+        ></textarea>
+
+        <button id="saveNote" class="primary-btn">
+            Salvar anotação
+        </button>
+
+    </div>
+
+</div>
+
+
+<script src="app.js"></script>
+
+</body>
+</html>
