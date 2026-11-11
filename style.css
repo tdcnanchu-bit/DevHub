@@ -1184,3 +1184,274 @@ body.dark .search-box select {
     background: #1c1c24;
     color: #fff;
 }
+
+/* =====================================================
+   DEVHUB 5.0 — SISTEMA VISUAL E PROGRESSO
+===================================================== */
+
+.v5-continue-card,
+.v5-level-card,
+.v5-week-card {
+    margin-top: 18px;
+}
+
+.v5-continue-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.v5-continue-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.v5-continue-icon {
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    background: rgba(108, 99, 255, .12);
+    font-size: 25px;
+}
+
+.v5-level-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.v5-level-number {
+    font-size: 26px;
+    font-weight: 800;
+}
+
+.v5-xp-small {
+    opacity: .72;
+    font-size: 13px;
+}
+
+.v5-course-progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0 6px;
+    font-size: 13px;
+}
+
+.v5-course-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    background: rgba(108, 99, 255, .10);
+}
+
+.v5-course-status.complete {
+    background: rgba(46, 155, 98, .12);
+}
+
+.v5-course-filter {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 14px 0 18px;
+}
+
+.v5-course-filter select {
+    min-width: 170px;
+    border: 1px solid var(--border, #ddd);
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: var(--card, #fff);
+    color: inherit;
+}
+
+.v5-lesson-progress {
+    margin: 12px 0 18px;
+}
+
+.v5-lesson-progress-head {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 7px;
+    font-size: 13px;
+    opacity: .78;
+}
+
+.v5-lesson-complete {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(46, 155, 98, .12);
+    font-weight: 700;
+    color: #2e9b62;
+}
+
+.v5-lesson-lock {
+    padding: 16px;
+    border-radius: 14px;
+    background: rgba(255, 170, 0, .10);
+    border: 1px solid rgba(255, 170, 0, .22);
+    margin-top: 16px;
+}
+
+.v5-next-tip {
+    margin-top: 10px;
+    font-size: 13px;
+    opacity: .72;
+}
+
+.v5-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.v5-stat-box {
+    padding: 15px;
+    border-radius: 15px;
+    background: rgba(108, 99, 255, .07);
+}
+
+.v5-stat-box span {
+    display: block;
+    font-size: 21px;
+    margin-bottom: 6px;
+}
+
+.v5-stat-box strong {
+    display: block;
+    font-size: 20px;
+}
+
+.v5-stat-box small {
+    opacity: .68;
+}
+
+.v5-empty {
+    text-align: center;
+    padding: 35px 20px;
+}
+
+.v5-course-card {
+    position: relative;
+}
+
+.v5-course-card.course-complete::after {
+    content: "✓";
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(46, 155, 98, .14);
+    color: #2e9b62;
+    font-weight: 900;
+}
+
+@media (max-width: 850px) {
+    .v5-stat-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 560px) {
+    .v5-stat-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .v5-continue-inner {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .v5-continue-inner .primary-btn {
+        width: 100%;
+    }
+
+    .v5-course-filter select {
+        width: 100%;
+    }
+}
+
+
+/* =====================================================
+   DEVHUB 6.0 — GAMIFICAÇÃO
+===================================================== */
+.v6-reward-button { margin-top: 14px; }
+.v6-reward-button:disabled,
+.v6-reward-card button:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+.v6-inline-hint, .v6-badge-count {
+    color: var(--muted);
+    font-size: 13px;
+}
+.v6-badge-count { margin-left: auto; font-weight: 700; }
+.v6-lock-message {
+    margin-top: 12px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    background: rgba(108, 99, 255, .09);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 650;
+}
+.v6-done-label { display: inline-block; margin-top: 8px; color: #239b62; }
+.v6-locked-challenge { opacity: .78; }
+.v6-badge-unlocked {
+    border-color: rgba(46, 155, 98, .45);
+    background: rgba(46, 155, 98, .055);
+}
+.achievement em {
+    display: block;
+    margin-top: 8px;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 700;
+    color: #299764;
+}
+.achievement.locked em { color: var(--muted); }
+.v6-rewards-panel { margin-top: 18px; }
+.v6-rewards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+}
+.v6-reward-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+}
+.v6-reward-card > span { font-size: 28px; }
+.v6-reward-card strong { line-height: 1.35; }
+.v6-reward-card small { color: var(--muted); min-height: 30px; }
+.v6-reward-card.locked { opacity: .55; }
+.v6-reward-card.unlocked { border-color: rgba(108, 99, 255, .45); }
+.v6-reward-card button { margin-top: auto; width: 100%; }
+@media (max-width: 560px) {
+    .v6-badge-count { width: 100%; margin-left: 0; }
+    .v6-rewards-grid { grid-template-columns: 1fr; }
+}

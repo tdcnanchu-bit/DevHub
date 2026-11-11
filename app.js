@@ -3181,3 +3181,804 @@ showPage = function enhancedShowPage(page) {
 injectDashboardEnhancements();
 updateDashboardEnhancements();
 injectCourseFilter();
+
+/* =====================================================
+   DEVHUB 5.0 — MELHORIAS COMPLETAS
+   Progresso + níveis + continuar + filtros + aulas
+   sequenciais + estatísticas + UX + PWA
+===================================================== */
+
+if (!window.__DEVHUB_50__) {
+    window.__DEVHUB_50__ = true;
+
+    // Migração segura do estado antigo.
+    state.projects = state.projects && typeof state.projects === "object" ? state.projects : {};
+    state.studyDays = Array.isArray(state.studyDays) ? state.studyDays : [];
+    state.lessonOpened = state.lessonOpened && typeof state.lessonOpened === "object"
+        ? state.lessonOpened
+        : {};
+
+    function v5Save() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (error) {
+            console.warn("Não foi possível salvar o estado:", error);
+        }
+    }
+
+    function v5Today() {
+        const d = new Date();
+        return d.toISOString().slice(0, 10);
+    }
+
+    function v5GetCompleted(courseId) {
+        return Array.isArray(state.completed?.[courseId])
+            ? state.completed[courseId]
+            : [];
+    }
+
+    function v5IsUnlocked(courseId, index) {
+        if (index <= 0) return true;
+        return v5GetCompleted(courseId).includes(index - 1);
+    }
+
+    function v5NextLesson(course) {
+        if (!course) return 0;
+        const done = v5GetCompleted(course.id);
+        for (let i = 0; i < course.lessons.length; i++) {
+            if (!done.includes(i)) return i;
+        }
+        return Math.max(0, course.lessons.length - 1);
+    }
+
+    function v5OverallProgress() {
+        const total = COURSES.reduce((sum, c) => sum + c.lessons.length, 0);
+        const done = countCompletedLessons();
+        return total ? Math.round((done / total) * 100) : 0;
+    }
+
+    function v5LevelInfo() {
+        const xp = Number(state.xp) || 0;
+        const level = Math.floor(xp / 100) + 1;
+        const currentStart = (level - 1) * 100;
+        const nextAt = level * 100;
+        const inside = xp - currentStart;
+        const percent = Math.min(100, Math.round((inside / 100) * 100));
+        return { level, xp, currentStart, nextAt, inside, percent };
+    }
+
+    function v5CountProjectsCompleted() {
+        return PROJECTS.filter(project => {
+            const key = projectKey(project);
+            const done = Array.isArray(state.projects[key]) ? state.projects[key] : [];
+            return done.length >= project.tasks.length;
+        }).length;
+    }
+
+    function v5InjectDashboard() {
+        const page = document.getElementById("dashboardPage");
+        if (!page || document.getElementById("v5Dashboard")) return;
+
+        const anchor = page.querySelector(".dashboard-grid") || page.querySelector(".quick-grid");
+        if (!anchor) return;
+
+        const box = document.createElement("div");
+        box.id = "v5Dashboard";
+        box.innerHTML = `
+            <div id="v5ContinueCard" class="panel v5-continue-card"></div>
+            <div id="v5LevelCard" class="panel v5-level-card"></div>
+            <div class="v5-stat-grid">
+                <div class="v5-stat-box"><span>📈</span><strong id="v5Overall">0%</strong><small>Progresso geral</small></div>
+                <div class="v5-stat-box"><span>🔥</span><strong id="v5StudyDays">0</strong><small>Dias estudados</small></div>
+                <div class="v5-stat-box"><span>🚀</span><strong id="v5ProjectsDone">0</strong><small>Projetos concluídos</small></div>
+                <div class="v5-stat-box"><span>🎯</span><strong id="v5LessonsLeft">0</strong><small>Aulas restantes</small></div>
+            </div>
+        `;
+        anchor.parentNode.insertBefore(box, anchor);
+    }
+
+    function v5RenderDashboard() {
+        v5InjectDashboard();
+
+        const overall = document.getElementById("v5Overall");
+        const days = document.getElementById("v5StudyDays");
+        const projects = document.getElementById("v5ProjectsDone");
+        const left = document.getElementById("v5LessonsLeft");
+
+        if (overall) overall.textContent = `${v5OverallProgress()}%`;
+        if (days) days.textContent = state.studyDays.length;
+        if (projects) projects.textContent = v5CountProjectsCompleted();
+
+        const totalLessons = COURSES.reduce((sum, c) => sum + c.lessons.length, 0);
+        if (left) left.textContent = Math.max(0, totalLessons - countCompletedLessons());
+
+        const continueCard = document.getElementById("v5ContinueCard");
+        const levelCard = document.getElementById("v5LevelCard");
+
+        const course = COURSES.find(c => getCourseProgress(c) > 0 && getCourseProgress(c) < c.lessons.length)
+            || COURSES.find(c => getCourseProgress(c) === 0)
+            || COURSES[0];
+
+        if (continueCard && course) {
+            const index = v5NextLesson(course);
+            const lesson = course.lessons[index];
+            const percent = getProgressPercent(course);
+            continueCard.innerHTML = `
+                <div class="v5-continue-inner">
+                    <div class="v5-continue-info">
+                        <div class="v5-continue-icon">${course.icon}</div>
+                        <div>
+                            <h3>▶️ Continuar estudando</h3>
+                            <p><strong>${escapeHTML(course.title)}</strong> · Aula ${index + 1}: ${escapeHTML(lesson.title)}</p>
+                            <small>${percent}% concluído · ${getCourseProgress(course)}/${course.lessons.length} aulas</small>
+                        </div>
+                    </div>
+                    <button class="primary-btn" onclick="openCourse('${course.id}')">Continuar</button>
+                </div>
+            `;
+        }
+
+        const info = v5LevelInfo();
+        if (levelCard) {
+            levelCard.innerHTML = `
+                <div class="v5-level-row">
+                    <div>
+                        <small>NÍVEL ATUAL</small>
+                        <div class="v5-level-number">Nível ${info.level}</div>
+                    </div>
+                    <div class="v5-xp-small">${info.xp} / ${info.nextAt} XP</div>
+                </div>
+                <div class="progress"><div style="width:${info.percent}%"></div></div>
+                <div class="v5-xp-small" style="margin-top:7px">
+                    ${info.nextAt - info.xp > 0 ? `Faltam ${info.nextAt - info.xp} XP para o nível ${info.level + 1}.` : "Novo nível desbloqueado!"}
+                </div>
+            `;
+        }
+    }
+
+    function v5InjectCourseFilter() {
+        const searchBox = document.querySelector("#coursesPage .search-box");
+        if (!searchBox || document.getElementById("v5CourseFilter")) return;
+
+        const wrap = document.createElement("div");
+        wrap.id = "v5CourseFilter";
+        wrap.className = "v5-course-filter";
+        wrap.innerHTML = `
+            <select id="v5CourseLevel">
+                <option value="all">Todos os níveis</option>
+                <option value="Iniciante">Iniciante</option>
+                <option value="Intermediário">Intermediário</option>
+                <option value="Avançado">Avançado</option>
+            </select>
+            <select id="v5CourseStatus">
+                <option value="all">Todos os status</option>
+                <option value="new">Não iniciado</option>
+                <option value="progress">Em andamento</option>
+                <option value="done">Concluído</option>
+            </select>
+        `;
+        searchBox.parentNode.insertBefore(wrap, searchBox.nextSibling);
+
+        ["v5CourseLevel", "v5CourseStatus"].forEach(id => {
+            document.getElementById(id).addEventListener("change", () => renderCourses());
+        });
+    }
+
+    function v5RenderCourses() {
+        v5InjectCourseFilter();
+
+        const grid = document.getElementById("coursesGrid");
+        const searchInput = document.getElementById("courseSearch");
+        if (!grid || !searchInput) return;
+
+        const search = searchInput.value.toLowerCase().trim();
+        const level = document.getElementById("v5CourseLevel")?.value || "all";
+        const status = document.getElementById("v5CourseStatus")?.value || "all";
+
+        const filtered = COURSES.filter(course => {
+            const completed = getCourseProgress(course);
+            const percent = getProgressPercent(course);
+
+            const matchesSearch = `${course.title} ${course.description}`
+                .toLowerCase().includes(search);
+
+            const courseLevel = course.level || (
+                course.title === "JavaScript" ? "Intermediário" :
+                course.title === "CSS" ? "Iniciante" : "Iniciante"
+            );
+
+            const matchesLevel = level === "all" || courseLevel === level;
+            const matchesStatus =
+                status === "all" ||
+                (status === "new" && completed === 0) ||
+                (status === "progress" && completed > 0 && percent < 100) ||
+                (status === "done" && percent === 100);
+
+            return matchesSearch && matchesLevel && matchesStatus;
+        });
+
+        const count = document.getElementById("courseCount");
+        if (count) count.textContent = `${filtered.length} cursos`;
+
+        if (!filtered.length) {
+            grid.innerHTML = `<div class="panel v5-empty"><h3>Nenhum curso encontrado.</h3><p>Altere a busca ou os filtros.</p></div>`;
+            return;
+        }
+
+        grid.innerHTML = filtered.map(course => {
+            const completed = getCourseProgress(course);
+            const percent = getProgressPercent(course);
+            const level = course.level || (
+                course.title === "JavaScript" ? "Intermediário" :
+                course.title === "CSS" ? "Iniciante" : "Iniciante"
+            );
+            const statusText = percent === 100 ? "✓ Concluído" : completed ? "▶ Em andamento" : "○ Não iniciado";
+
+            return `
+                <article class="course-card v5-course-card ${percent === 100 ? "course-complete" : ""}">
+                    <div class="course-icon">${course.icon}</div>
+                    <span class="course-level-badge">${escapeHTML(level)}</span>
+                    <h3>${escapeHTML(course.title)}</h3>
+                    <p>${escapeHTML(course.description)}</p>
+                    <div class="v5-course-progress">
+                        <span>📚 ${completed}/${course.lessons.length} aulas</span>
+                        <strong>${percent}%</strong>
+                    </div>
+                    <div class="progress"><div style="width:${percent}%"></div></div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px">
+                        <span class="v5-course-status ${percent === 100 ? "complete" : ""}">${statusText}</span>
+                        <button class="primary-btn" onclick="openCourse('${course.id}')">
+                            ${percent === 100 ? "Revisar curso" : completed ? "Continuar" : "Começar"}
+                        </button>
+                    </div>
+                </article>
+            `;
+        }).join("");
+    }
+
+    function v5OpenCourse(id) {
+        currentCourse = COURSES.find(course => course.id === id);
+        if (!currentCourse) return;
+
+        currentLesson = v5NextLesson(currentCourse);
+        state.lessonOpened[id] = new Date().toISOString();
+        v5Save();
+
+        showPage("lesson");
+        renderLesson();
+    }
+
+    function v5RenderLesson() {
+        if (!currentCourse) return;
+
+        const total = currentCourse.lessons.length;
+        currentLesson = Math.max(0, Math.min(currentLesson, total - 1));
+
+        const lesson = currentCourse.lessons[currentLesson];
+        const completed = isLessonCompleted(currentCourse.id, currentLesson);
+        const unlocked = v5IsUnlocked(currentCourse.id, currentLesson);
+        const coursePercent = getProgressPercent(currentCourse);
+
+        const content = document.getElementById("lessonContent");
+        if (!content) return;
+
+        if (!unlocked) {
+            currentLesson = Math.max(0, currentLesson - 1);
+            return renderLesson();
+        }
+
+        content.innerHTML = `
+            <div class="lesson-header">
+                <span class="lesson-number">Aula ${currentLesson + 1} de ${total}</span>
+                <h1>${escapeHTML(lesson.title)}</h1>
+                <p>${escapeHTML(currentCourse.description)}</p>
+                <div class="v5-lesson-progress">
+                    <div class="v5-lesson-progress-head">
+                        <span>Progresso do curso</span>
+                        <strong>${coursePercent}%</strong>
+                    </div>
+                    <div class="progress"><div style="width:${coursePercent}%"></div></div>
+                </div>
+            </div>
+
+            <div class="lesson-body">
+                <div class="lesson-box">
+                    <h3>📖 Conteúdo</h3>
+                    <p>${escapeHTML(lesson.text)}</p>
+
+                    <h3>💻 Exemplo</h3>
+                    <pre class="lesson-code"><code>${escapeHTML(lesson.code)}</code></pre>
+                </div>
+
+                <div class="lesson-box">
+                    <h3>🧩 Exercício</h3>
+                    <div class="exercise">${escapeHTML(lesson.exercise)}</div>
+                    <p>Faça o exercício no Laboratório e pratique o conteúdo.</p>
+                    <button class="secondary-btn" onclick="showPage('lab')">💻 Abrir laboratório</button>
+
+                    ${completed
+                        ? `<div class="v5-lesson-complete" style="margin-top:15px">✓ Você já concluiu esta aula</div>`
+                        : `<div class="v5-next-tip">Conclua esta aula para desbloquear a próxima.</div>`
+                    }
+                </div>
+            </div>
+
+            <div class="lesson-actions">
+                <button class="secondary-btn" onclick="previousLesson()" ${currentLesson === 0 ? "disabled" : ""}>← Anterior</button>
+
+                <button class="primary-btn" onclick="completeLesson()">
+                    ${completed ? "✓ Aula concluída" : "Concluir aula +10 XP"}
+                </button>
+
+                <button class="secondary-btn" onclick="nextLesson()" ${currentLesson >= total - 1 || !completed ? "disabled" : ""}>
+                    ${currentLesson >= total - 1 ? "Curso concluído 🎉" : "Próxima →"}
+                </button>
+            </div>
+        `;
+    }
+
+    function v5CompleteLesson() {
+        if (!currentCourse) return;
+
+        if (isLessonCompleted(currentCourse.id, currentLesson)) {
+            showToast("Esta aula já foi concluída.", "info");
+            return;
+        }
+
+        if (!v5IsUnlocked(currentCourse.id, currentLesson)) {
+            showToast("Conclua a aula anterior primeiro.", "error");
+            return;
+        }
+
+        if (!Array.isArray(state.completed[currentCourse.id])) {
+            state.completed[currentCourse.id] = [];
+        }
+
+        state.completed[currentCourse.id].push(currentLesson);
+        state.daily.lessons = Number(state.daily.lessons || 0) + 1;
+
+        if (!Array.isArray(state.studyDays)) state.studyDays = [];
+        const today = v5Today();
+        if (!state.studyDays.includes(today)) state.studyDays.push(today);
+
+        const oldLevel = getLevel();
+        state.xp = Number(state.xp || 0) + 10;
+        const newLevel = getLevel();
+
+        v5Save();
+
+        updateStats();
+        renderDashboard();
+        v5RenderDashboard();
+        v5RenderLesson();
+
+        showToast(
+            newLevel > oldLevel
+                ? `Aula concluída! +10 XP 🎉 Nível ${newLevel}! 🚀`
+                : "Aula concluída! +10 XP 🎉"
+        );
+    }
+
+    function v5NextLessonNav() {
+        if (!currentCourse) return;
+
+        if (currentLesson >= currentCourse.lessons.length - 1) {
+            showToast("Você chegou ao final do curso! 🎉", "info");
+            return;
+        }
+
+        if (!isLessonCompleted(currentCourse.id, currentLesson)) {
+            showToast("Conclua esta aula para desbloquear a próxima.", "error");
+            return;
+        }
+
+        currentLesson++;
+        renderLesson();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function v5PreviousLessonNav() {
+        if (!currentCourse || currentLesson <= 0) return;
+        currentLesson--;
+        renderLesson();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // Substituições do sistema principal.
+    openCourse = v5OpenCourse;
+    renderCourses = v5RenderCourses;
+    renderLesson = v5RenderLesson;
+    completeLesson = v5CompleteLesson;
+    nextLesson = v5NextLessonNav;
+    previousLesson = v5PreviousLessonNav;
+
+    // Perfil: mostra nível e progresso até o próximo nível.
+    const oldRenderProfileV5 = renderProfile;
+    renderProfile = function v5Profile() {
+        oldRenderProfileV5();
+
+        const profile = document.getElementById("profilePage");
+        if (!profile) return;
+
+        let card = document.getElementById("v5ProfileLevel");
+        if (!card) {
+            card = document.createElement("div");
+            card.id = "v5ProfileLevel";
+            card.className = "panel v5-level-card";
+            profile.appendChild(card);
+        }
+
+        const info = v5LevelInfo();
+        card.innerHTML = `
+            <div class="v5-level-row">
+                <div>
+                    <small>EVOLUÇÃO</small>
+                    <div class="v5-level-number">Nível ${info.level}</div>
+                </div>
+                <strong>${info.xp} XP</strong>
+            </div>
+            <div class="progress"><div style="width:${info.percent}%"></div></div>
+            <p class="v5-xp-small" style="margin-top:8px">
+                ${info.nextAt - info.xp} XP para o nível ${info.level + 1}
+            </p>
+        `;
+    };
+
+    // Evita que a versão antiga volte a sobrescrever as telas.
+    const oldShowPageV5 = showPage;
+    showPage = function v5ShowPage(page) {
+        oldShowPageV5(page);
+
+        if (page === "dashboard") {
+            v5RenderDashboard();
+        } else if (page === "courses") {
+            v5RenderCourses();
+        } else if (page === "lesson") {
+            v5RenderLesson();
+        } else if (page === "profile") {
+            renderProfile();
+        }
+    };
+
+    // Atualiza a interface após login/inicialização.
+    const oldUpdateInterfaceV5 = updateInterface;
+    updateInterface = function v5UpdateInterface() {
+        oldUpdateInterfaceV5();
+        v5RenderDashboard();
+        v5InjectCourseFilter();
+    };
+
+    // Atualiza o dashboard depois de alterações.
+    const oldRenderDashboardV5 = renderDashboard;
+    renderDashboard = function v5Dashboard() {
+        oldRenderDashboardV5();
+        v5RenderDashboard();
+    };
+
+    // XP: mantém a regra original, mas mostra a evolução de nível.
+    const oldAddXPV5 = addXP;
+    addXP = function v5AddXP(amount) {
+        const before = getLevel();
+        oldAddXPV5(amount);
+        const after = getLevel();
+        if (after > before) {
+            showToast(`🎉 Você alcançou o Nível ${after}!`);
+        }
+        v5RenderDashboard();
+    };
+
+    // Melhora o tema e mantém os dados.
+    applyTheme();
+
+    // Service Worker com atualização.
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.addEventListener("message", event => {
+            if (event.data?.type === "DEVHUB_UPDATED") {
+                showToast("Nova versão do DevHub disponível. Recarregue a página.", "info");
+            }
+        });
+    }
+
+    // Primeira renderização.
+    setTimeout(() => {
+        v5InjectDashboard();
+        v5InjectCourseFilter();
+        if (state.logged) {
+            v5RenderDashboard();
+            if (document.getElementById("coursesPage")?.classList.contains("active-page")) {
+                v5RenderCourses();
+            }
+        }
+    }, 0);
+}
+
+
+/* =====================================================
+   DEVHUB 6.0 — GAMIFICAÇÃO
+   Medalhas, missão diária com recompensa e desafios por nível
+===================================================== */
+
+(function devhubGamificationV6() {
+    if (window.__DEVHUB_GAMIFICATION_V6__) return;
+    window.__DEVHUB_GAMIFICATION_V6__ = true;
+
+    // Estado novo com migração compatível: não apaga o progresso anterior.
+    state.gamification = state.gamification && typeof state.gamification === "object"
+        ? state.gamification : {};
+    state.gamification.claimedRewards = Array.isArray(state.gamification.claimedRewards)
+        ? state.gamification.claimedRewards : [];
+    state.gamification.dailyClaimedDate = state.gamification.dailyClaimedDate || "";
+    state.gamification.unlockedBadges = Array.isArray(state.gamification.unlockedBadges)
+        ? state.gamification.unlockedBadges : [];
+
+    const v6Today = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    };
+    const v6Save = () => {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        catch (e) { console.warn("Falha ao salvar gamificação:", e); }
+    };
+
+    // Missão diária: duas aulas concluídas, com bônus único de 30 XP por dia.
+    const oldSetupDailyMissionV6 = setupDailyMission;
+    setupDailyMission = function setupDailyMissionV6() {
+        const today = v6Today();
+        if (!state.daily || state.daily.date !== today) {
+            state.daily = { date: today, lessons: 0 };
+            v6Save();
+        }
+    };
+
+    function injectDailyRewardButton() {
+        const panel = document.querySelector("#dashboardPage .panel-title #dailyMissionText")?.closest(".panel");
+        if (!panel || document.getElementById("v6DailyReward")) return;
+        const button = document.createElement("button");
+        button.id = "v6DailyReward";
+        button.className = "primary-btn v6-reward-button";
+        button.type = "button";
+        button.textContent = "🎁 Resgatar +30 XP";
+        button.addEventListener("click", claimDailyReward);
+        panel.appendChild(button);
+    }
+
+    renderDailyMission = function renderDailyMissionV6() {
+        setupDailyMission();
+        injectDailyRewardButton();
+        const goal = 2;
+        const progress = Math.min(Number(state.daily.lessons) || 0, goal);
+        const claimed = state.gamification.dailyClaimedDate === v6Today();
+        const progressEl = document.getElementById("missionProgress");
+        const bar = document.getElementById("missionBar");
+        const text = document.getElementById("dailyMissionText");
+        const button = document.getElementById("v6DailyReward");
+        if (progressEl) progressEl.textContent = `${progress}/${goal}`;
+        if (bar) bar.style.width = `${progress / goal * 100}%`;
+        if (text) {
+            text.textContent = progress >= goal
+                ? (claimed ? "Missão concluída! Recompensa já resgatada. Volte amanhã!" : "Missão concluída! Resgate seus 30 XP de bônus.")
+                : `Conclua ${goal - progress} aula(s) para ganhar 30 XP extras.`;
+        }
+        if (button) {
+            button.disabled = progress < goal || claimed;
+            button.textContent = claimed ? "✓ Recompensa resgatada" : "🎁 Resgatar +30 XP";
+        }
+    };
+
+    function claimDailyReward() {
+        setupDailyMission();
+        if ((Number(state.daily.lessons) || 0) < 2) {
+            showToast("Conclua 2 aulas para liberar a recompensa.", "info");
+            return;
+        }
+        if (state.gamification.dailyClaimedDate === v6Today()) {
+            showToast("Você já resgatou a recompensa de hoje.", "info");
+            return;
+        }
+        state.gamification.dailyClaimedDate = v6Today();
+        v6Save();
+        addXP(30);
+        renderDailyMission();
+        showToast("🎁 +30 XP resgatados pela missão diária!");
+    }
+    window.claimDailyReward = claimDailyReward;
+
+    // Requisitos de nível para cada dificuldade.
+    const v6RequiredLevel = { easy: 1, medium: 3, hard: 5 };
+    const v6DifficultyName = { easy: "Iniciante", medium: "Intermediário", hard: "Avançado" };
+
+    renderChallenges = function renderChallengesV6() {
+        const grid = document.getElementById("challengesGrid");
+        if (!grid) return;
+        const doneIds = Array.isArray(state.challenges) ? state.challenges : [];
+        const availableCount = CHALLENGES.filter(c => getLevel() >= v6RequiredLevel[c.difficulty]).length;
+        const progress = document.getElementById("challengeProgress");
+        if (progress) progress.textContent = `${doneIds.length}/${CHALLENGES.length} concluídos`;
+        grid.innerHTML = CHALLENGES.map(challenge => {
+            const required = v6RequiredLevel[challenge.difficulty] || 1;
+            const locked = getLevel() < required;
+            const done = doneIds.includes(challenge.id);
+            return `
+                <article class="challenge-card ${done ? "completed" : ""} ${locked ? "v6-locked-challenge" : ""}">
+                    <div class="challenge-top">
+                        <span class="difficulty ${challenge.difficulty}">${v6DifficultyName[challenge.difficulty]}</span>
+                        <span class="challenge-xp">+${challenge.xp} XP</span>
+                    </div>
+                    <h3>${escapeHTML(challenge.title)}</h3>
+                    <p>${escapeHTML(challenge.question)}</p>
+                    ${locked
+                        ? `<div class="v6-lock-message">🔒 Desbloqueia no nível ${required}. Você está no nível ${getLevel()}.</div>`
+                        : done
+                            ? `<strong class="v6-done-label">✓ Desafio concluído</strong>`
+                            : `<div class="challenge-answer">
+                                <input id="answer-${challenge.id}" placeholder="Sua resposta..." autocomplete="off">
+                                <button class="primary-btn" onclick="answerChallenge(${challenge.id})">Verificar</button>
+                               </div>`
+                    }
+                </article>`;
+        }).join("");
+        const hint = document.getElementById("v6ChallengeHint");
+        if (hint) hint.textContent = `${availableCount} de ${CHALLENGES.length} desafios liberados no seu nível.`;
+    };
+
+    // Medalhas novas são calculadas a partir dos dados reais do jogador.
+    renderAchievements = function renderAchievementsV6() {
+        const container = document.getElementById("achievements");
+        if (!container) return;
+        const lessons = countCompletedLessons();
+        const challenges = state.challenges.length;
+        const projects = state.projects && typeof state.projects === "object"
+            ? PROJECTS.filter(p => Array.isArray(state.projects[projectKey(p)]) &&
+                state.projects[projectKey(p)].length === p.tasks.length).length : 0;
+        const badges = [
+            { id:"first-lesson", icon:"🌱", title:"Primeiro passo", text:"Conclua sua primeira aula", ok:lessons>=1 },
+            { id:"five-lessons", icon:"📚", title:"Estudante dedicado", text:"Conclua 5 aulas", ok:lessons>=5 },
+            { id:"ten-lessons", icon:"🧠", title:"Mente curiosa", text:"Conclua 10 aulas", ok:lessons>=10 },
+            { id:"first-challenge", icon:"🎯", title:"Desafiante", text:"Resolva seu primeiro desafio", ok:challenges>=1 },
+            { id:"five-challenges", icon:"🏆", title:"Caçador de desafios", text:"Resolva 5 desafios", ok:challenges>=5 },
+            { id:"streak-three", icon:"🔥", title:"Em chamas", text:"Estude por 3 dias seguidos", ok:state.streak>=3 },
+            { id:"streak-seven", icon:"⚡", title:"Constância", text:"Estude por 7 dias seguidos", ok:state.streak>=7 },
+            { id:"level-five", icon:"🚀", title:"Nível 5", text:"Alcance o nível 5", ok:getLevel()>=5 },
+            { id:"level-ten", icon:"👑", title:"Lenda DevHub", text:"Alcance o nível 10", ok:getLevel()>=10 },
+            { id:"xp-thousand", icon:"💎", title:"Mil XP", text:"Acumule 1.000 XP", ok:state.xp>=1000 },
+            { id:"daily-mission", icon:"🎁", title:"Missão cumprida", text:"Resgate uma missão diária", ok:!!state.gamification.dailyClaimedDate },
+            { id:"first-project", icon:"💻", title:"Criador", text:"Conclua seu primeiro projeto", ok:projects>=1 }
+        ];
+        const newlyUnlocked = badges.filter(b => b.ok && !state.gamification.unlockedBadges.includes(b.id));
+        newlyUnlocked.forEach(b => state.gamification.unlockedBadges.push(b.id));
+        if (newlyUnlocked.length) v6Save();
+        container.innerHTML = badges.map(b => `
+            <div class="achievement ${b.ok ? "v6-badge-unlocked" : "locked"}">
+                <span>${b.icon}</span>
+                <strong>${escapeHTML(b.title)}</strong>
+                <small>${escapeHTML(b.text)}</small>
+                <em>${b.ok ? "Desbloqueada ✓" : "Bloqueada 🔒"}</em>
+            </div>`).join("");
+        const count = document.getElementById("v6BadgeCount");
+        if (count) count.textContent = `${badges.filter(b=>b.ok).length}/${badges.length} medalhas`;
+    };
+
+    // Recompensas únicas por marcos de nível. O XP bônus só pode ser resgatado uma vez.
+    const V6_LEVEL_REWARDS = [
+        { level:2, icon:"🎨", name:"Tema de aprendiz", xp:20, description:"Bônus de evolução: +20 XP" },
+        { level:3, icon:"🧩", name:"Desafios intermediários", xp:30, description:"Bônus de evolução: +30 XP" },
+        { level:5, icon:"🏅", name:"Medalha de programador", xp:50, description:"Bônus de evolução: +50 XP" },
+        { level:7, icon:"🔥", name:"Mestre da consistência", xp:70, description:"Bônus de evolução: +70 XP" },
+        { level:10, icon:"👑", name:"Lenda DevHub", xp:100, description:"Bônus de evolução: +100 XP" }
+    ];
+
+    function renderLevelRewards() {
+        const profile = document.getElementById("profilePage");
+        if (!profile) return;
+        let panel = document.getElementById("v6LevelRewards");
+        if (!panel) {
+            panel = document.createElement("div");
+            panel.id = "v6LevelRewards";
+            panel.className = "panel v6-rewards-panel";
+            panel.innerHTML = `<div class="section-header"><div><h2>🎁 Recompensas por nível</h2><p>Suba de nível e resgate seus bônus.</p></div></div><div id="v6RewardsGrid" class="v6-rewards-grid"></div>`;
+            profile.appendChild(panel);
+        }
+        const grid = document.getElementById("v6RewardsGrid");
+        const level = getLevel();
+        grid.innerHTML = V6_LEVEL_REWARDS.map(r => {
+            const unlocked = level >= r.level;
+            const claimed = state.gamification.claimedRewards.includes(r.level);
+            return `<article class="v6-reward-card ${unlocked ? "unlocked" : "locked"}">
+                <span>${r.icon}</span><strong>Nível ${r.level} — ${escapeHTML(r.name)}</strong>
+                <small>${escapeHTML(r.description)}</small>
+                <button class="primary-btn" ${!unlocked || claimed ? "disabled" : ""} onclick="claimLevelReward(${r.level})">
+                    ${claimed ? "✓ Resgatada" : unlocked ? `Resgatar +${r.xp} XP` : `🔒 Faltam ${r.level-level} nível(is)`}
+                </button>
+            </article>`;
+        }).join("");
+    }
+
+    function claimLevelReward(level) {
+        const reward = V6_LEVEL_REWARDS.find(r => r.level === level);
+        if (!reward || getLevel() < level || state.gamification.claimedRewards.includes(level)) {
+            showToast("Essa recompensa ainda não está disponível.", "info");
+            return;
+        }
+        state.gamification.claimedRewards.push(level);
+        v6Save();
+        addXP(reward.xp);
+        renderLevelRewards();
+        showToast(`${reward.icon} Recompensa resgatada: +${reward.xp} XP!`);
+    }
+    window.claimLevelReward = claimLevelReward;
+
+    // Atualiza os painéis quando XP, nível ou perfil mudarem.
+    const oldAddXPV6 = addXP;
+    addXP = function addXPV6(amount) {
+        oldAddXPV6(amount);
+        if (state.logged) {
+            renderDailyMission();
+            renderChallenges();
+            renderAchievements();
+            renderLevelRewards();
+        }
+    };
+
+    const oldRenderProfileV6 = renderProfile;
+    renderProfile = function renderProfileV6() {
+        oldRenderProfileV6();
+        renderAchievements();
+        renderLevelRewards();
+    };
+
+    const oldRenderDashboardV6 = renderDashboard;
+    renderDashboard = function renderDashboardV6() {
+        oldRenderDashboardV6();
+        renderDailyMission();
+        renderAchievements();
+    };
+
+    const oldShowPageV6 = showPage;
+    showPage = function showPageV6(page) {
+        oldShowPageV6(page);
+        if (page === "challenges") renderChallenges();
+        if (page === "profile") {
+            renderProfile();
+            renderLevelRewards();
+        }
+        if (page === "dashboard") renderDailyMission();
+    };
+
+    // Expõe a atualização da missão após concluir uma aula.
+    const oldCompleteLessonV6 = completeLesson;
+    completeLesson = function completeLessonV6() {
+        oldCompleteLessonV6();
+        renderDailyMission();
+        renderAchievements();
+        renderChallenges();
+        renderLevelRewards();
+    };
+
+    function injectGamificationUI() {
+        const challengeHeader = document.querySelector("#challengesPage .section-header");
+        if (challengeHeader && !document.getElementById("v6ChallengeHint")) {
+            const hint = document.createElement("p");
+            hint.id = "v6ChallengeHint";
+            hint.className = "v6-inline-hint";
+            hint.textContent = "Desafios liberados conforme seu nível.";
+            challengeHeader.appendChild(hint);
+        }
+        const achievementPanel = document.getElementById("achievements")?.closest(".panel");
+        if (achievementPanel && !document.getElementById("v6BadgeCount")) {
+            const count = document.createElement("strong");
+            count.id = "v6BadgeCount";
+            count.className = "v6-badge-count";
+            achievementPanel.querySelector(".section-header")?.appendChild(count);
+        }
+        injectDailyRewardButton();
+    }
+
+    // Primeira renderização e compatibilidade com login já ativo.
+    setTimeout(() => {
+        injectGamificationUI();
+        renderDailyMission();
+        renderChallenges();
+        renderAchievements();
+        renderLevelRewards();
+    }, 0);
+})();
